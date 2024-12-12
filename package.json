@@ -1,0 +1,40 @@
+{
+  "name": "momo-payment-lib",
+  "version": "1.0.1",
+  "description": "A simple TypeScript library to integrate the MTN MoMo API for payment requests and transaction status retrieval.",
+  "main": "index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsup src/index.ts --dts --format cjs,esm",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["npm", "mtn", "momo", "payments", "typescript", "api", "mobile money"],
+  "author": "Egesa Michael",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/momo-payment-lib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/momo-payment-lib/issues"
+  },
+  "homepage": "https://github.com/yourusername/momo-payment-lib#readme",
+  "dependencies": {
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.2",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
