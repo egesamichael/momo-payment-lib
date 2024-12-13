@@ -165,7 +165,7 @@ const processPayment = async () => {
     const paymentResponse = await momoClient.requestPayment({
       amount: '100.00',
       currency: 'UGX',
-      refrence: 'Invoice001'
+      refrence: 'Invoice001',
       phoneNumber: '256789012345',
     });
 
