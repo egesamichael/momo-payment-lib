@@ -68,7 +68,7 @@ const requestPayment = async () => {
     const response = await momoClient.requestPayment({
       amount: 50.00,             // Payment amount
       currency: 'EUR',
-      refrence: 'Your invoice number'
+      refrence: 'Your invoice number',
       phoneNumber: '256123456789', // Phone number to charge in MSISDN format
     });
 
@@ -164,6 +164,8 @@ const processPayment = async () => {
     console.log('Requesting payment...');
     const paymentResponse = await momoClient.requestPayment({
       amount: '100.00',
+      currency: 'UGX',
+      refrence: 'Invoice001'
       phoneNumber: '256789012345',
     });
 
