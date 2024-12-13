@@ -34,8 +34,8 @@ var MoMoClient = class {
         `${this.baseUrl}/collection/v1_0/requesttopay`,
         {
           amount: payment.amount,
-          currency: "EUR",
-          externalId: "1234560096",
+          currency: payment.currency,
+          externalId: payment.refrence,
           payer: {
             partyIdType: "MSISDN",
             partyId: payment.phoneNumber

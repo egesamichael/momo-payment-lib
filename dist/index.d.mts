@@ -1,6 +1,8 @@
 interface PaymentRequest {
-    amount: string;
+    amount: number;
     phoneNumber: string;
+    currency: string;
+    refrence: string;
 }
 interface MoMoClientConfig {
     apiUserId: string;

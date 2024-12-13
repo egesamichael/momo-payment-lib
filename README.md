@@ -66,8 +66,10 @@ To initiate a payment:
 const requestPayment = async () => {
   try {
     const response = await momoClient.requestPayment({
-      amount: '50.00',             // Payment amount
-      phoneNumber: '256123456789', // Receiver's phone number in MSISDN format
+      amount: 50.00,             // Payment amount
+      currency: 'EUR',
+      refrence: 'Your invoice number'
+      phoneNumber: '256123456789', // Phone number to charge in MSISDN format
     });
 
     console.log('Payment initiated successfully:', response);
@@ -81,10 +83,12 @@ requestPayment();
 
 #### 📥 **Request Parameters**
 
-| Parameter    | Type     | Description                          |
-|--------------|----------|--------------------------------------|
-| `amount`     | `string` | Amount to charge.                   |
-| `phoneNumber`| `string` | Receiver's phone number (MSISDN).   |
+| Parameter    | Type     | Description                                  |
+|--------------|----------|---------------------------------------------|
+| `amount`     | `number` | Amount to charge.                           |
+| `currency`   | `string` | The currency you want to use.               |
+| `refrence`   | `string` | Your Refrence number for the payment.       |
+| `phoneNumber`| `string` | Receiver's phone number (MSISDN).           |
 
 #### ✅ **Response**
 

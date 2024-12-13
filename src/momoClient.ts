@@ -6,8 +6,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface PaymentRequest {
-  amount: string;
+  amount: number;
   phoneNumber: string;
+  currency: string;
+  refrence: string;
 }
 
 interface MoMoClientConfig {
@@ -55,8 +57,8 @@ export class MoMoClient {
         `${this.baseUrl}/collection/v1_0/requesttopay`,
         {
           amount: payment.amount,
-          currency: 'EUR',
-          externalId: '1234560096',
+          currency: payment.currency,
+          externalId: payment.refrence,
           payer: {
             partyIdType: 'MSISDN',
             partyId: payment.phoneNumber,
