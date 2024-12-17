@@ -10,7 +10,7 @@ A TypeScript library for integrating MTN MoMo API to manage various payment-rela
 Install the package via npm:
 
 ```bash
-npm install momo-payments-lib
+npm install momo-payment-lib
 ```
 
 ---
@@ -52,7 +52,7 @@ REMITTANCE_PRIMARY_KEY=your_remittance_primary_key
 Create an instance of `MoMoClient` with separate configurations for each product:
 
 ```typescript
-import { MoMoClient } from 'momo-payments-lib';
+import { MoMoClient } from 'momo-payment-lib';
 
 const momoClient = new MoMoClient({
   collection: {

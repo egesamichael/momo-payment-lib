@@ -1,40 +1,41 @@
-interface PaymentRequest {
-    amount: number;
-    phoneNumber: string;
-    currency: string;
-    refrence: string;
-}
-interface TransferRequest {
-    amount: number;
-    currency: string;
-    externalId: string;
-    partyId: string;
-    payerMessage: string;
-    payeeNote: string;
-}
-interface MoMoClientConfig {
+interface MoMoKeyConfig {
     apiUserId: string;
     apiKey: string;
-    collectionKey?: string;
-    remittanceKey?: string;
+    primaryKey: string;
+}
+interface MoMoClientConfig {
+    collectionKey: MoMoKeyConfig;
+    remittance: MoMoKeyConfig;
     environment?: 'sandbox' | 'production';
 }
+interface PaymentRequest {
+    amount: number;
+    currency: string;
+    phoneNumber: string;
+    reference: string;
+}
+interface RemittanceRequest {
+    amount: number;
+    currency: string;
+    receiverNumber: string;
+    reason: string;
+    reference: string;
+}
 declare class MoMoClient {
-    private apiUserId;
-    private apiKey;
-    private collectionKey?;
-    private remittanceKey?;
+    private collectionKey;
+    private remittance;
     private environment;
-    private baseUrl;
     constructor(config: MoMoClientConfig);
+    private getBaseUrl;
     private getAuthToken;
     requestPayment(payment: PaymentRequest): Promise<{
         referenceId: string;
     }>;
-    initiateTransfer(transfer: TransferRequest): Promise<{
+    getPaymentStatus(referenceId: string): Promise<any>;
+    sendRemittance(remittance: RemittanceRequest): Promise<{
         referenceId: string;
     }>;
-    getPaymentStatus(referenceId: string): Promise<any>;
+    getRemittanceStatus(referenceId: string): Promise<any>;
 }
 
 export { MoMoClient };

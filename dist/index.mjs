@@ -2,111 +2,126 @@
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Buffer } from "buffer";
-import dotenv from "dotenv";
-dotenv.config();
 var MoMoClient = class {
   constructor(config) {
-    this.apiUserId = config.apiUserId;
-    this.apiKey = config.apiKey;
     this.collectionKey = config.collectionKey;
-    this.remittanceKey = config.remittanceKey;
+    this.remittance = config.remittance;
     this.environment = config.environment || "sandbox";
-    this.baseUrl = `https://${this.environment === "sandbox" ? "sandbox" : "api"}.momodeveloper.mtn.com`;
   }
-  async getAuthToken(primaryKey) {
+  getBaseUrl() {
+    return `https://${this.environment === "sandbox" ? "sandbox" : "api"}.momodeveloper.mtn.com`;
+  }
+  async getAuthToken(keyConfig) {
     try {
-      const response = await axios.post(`${this.baseUrl}/token/`, null, {
+      const response = await axios.post(`${this.getBaseUrl()}/token/`, null, {
         headers: {
-          "Authorization": `Basic ${Buffer.from(`${this.apiUserId}:${this.apiKey}`).toString("base64")}`,
-          "Ocp-Apim-Subscription-Key": primaryKey
+          Authorization: `Basic ${Buffer.from(`${keyConfig.apiUserId}:${keyConfig.apiKey}`).toString("base64")}`,
+          "Ocp-Apim-Subscription-Key": keyConfig.primaryKey
         }
       });
       return response.data.access_token;
     } catch (error) {
-      console.error("Error getting auth token:", error.response?.data || error.message);
+      console.error("Error getting auth token:", error.response ? error.response.data : error.message);
       throw error;
     }
   }
+  // Request Payment (Collection Service)
   async requestPayment(payment) {
-    if (!this.collectionKey) throw new Error("Collection key is required for payments.");
     const referenceId = uuidv4();
-    const authToken = await this.getAuthToken(this.collectionKey);
     try {
+      const authToken = await this.getAuthToken(this.collectionKey);
       await axios.post(
-        `${this.baseUrl}/collection/v1_0/requesttopay`,
+        `${this.getBaseUrl()}/collection/v1_0/requesttopay`,
         {
           amount: payment.amount,
           currency: payment.currency,
-          externalId: payment.refrence,
+          externalId: payment.reference,
           payer: {
             partyIdType: "MSISDN",
             partyId: payment.phoneNumber
-          }
+          },
+          payerMessage: "Payment Request",
+          payeeNote: "Please complete payment"
         },
         {
           headers: {
-            "Authorization": `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
             "X-Reference-Id": referenceId,
             "X-Target-Environment": this.environment,
-            "Ocp-Apim-Subscription-Key": this.collectionKey
+            "Ocp-Apim-Subscription-Key": this.collectionKey.primaryKey
           }
         }
       );
       return { referenceId };
     } catch (error) {
-      console.error("Error requesting payment:", error.response?.data || error.message);
+      console.error("Error requesting payment:", error.response ? error.response.data : error.message);
       throw error;
     }
   }
-  async initiateTransfer(transfer) {
-    if (!this.remittanceKey) throw new Error("Remittance key is required for transfers.");
-    const referenceId = uuidv4();
-    const authToken = await this.getAuthToken(this.remittanceKey);
+  // Check Payment Status (Collection Service)
+  async getPaymentStatus(referenceId) {
     try {
+      const authToken = await this.getAuthToken(this.collectionKey);
+      const response = await axios.get(`${this.getBaseUrl()}/collection/v1_0/requesttopay/${referenceId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "X-Target-Environment": this.environment,
+          "Ocp-Apim-Subscription-Key": this.collectionKey.primaryKey
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error getting payment status:", error.response ? error.response.data : error.message);
+      throw error;
+    }
+  }
+  // Send Remittance (Remittance Service)
+  async sendRemittance(remittance) {
+    const referenceId = uuidv4();
+    try {
+      const authToken = await this.getAuthToken(this.remittance);
       await axios.post(
-        `${this.baseUrl}/remittance/v1_0/transfer`,
+        `${this.getBaseUrl()}/remittance/v1_0/transfer`,
         {
-          amount: transfer.amount,
-          currency: transfer.currency,
-          externalId: transfer.externalId,
+          amount: remittance.amount,
+          currency: remittance.currency,
+          externalId: remittance.reference,
           payee: {
             partyIdType: "MSISDN",
-            partyId: transfer.partyId
+            partyId: remittance.receiverNumber
           },
-          payerMessage: transfer.payerMessage,
-          payeeNote: transfer.payeeNote
+          payerMessage: "Funds Transfer",
+          payeeNote: remittance.reason
         },
         {
           headers: {
-            "Authorization": `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
             "X-Reference-Id": referenceId,
-            "Ocp-Apim-Subscription-Key": this.remittanceKey
+            "X-Target-Environment": this.environment,
+            "Ocp-Apim-Subscription-Key": this.remittance.primaryKey
           }
         }
       );
       return { referenceId };
     } catch (error) {
-      console.error("Error initiating transfer:", error.response?.data || error.message);
+      console.error("Error sending remittance:", error.response ? error.response.data : error.message);
       throw error;
     }
   }
-  async getPaymentStatus(referenceId) {
-    if (!this.collectionKey) throw new Error("Collection key is required for payment status.");
-    const authToken = await this.getAuthToken(this.collectionKey);
+  // Check Remittance Status (Remittance Service)
+  async getRemittanceStatus(referenceId) {
     try {
-      const response = await axios.get(
-        `${this.baseUrl}/collection/v1_0/requesttopay/${referenceId}`,
-        {
-          headers: {
-            "Authorization": `Bearer ${authToken}`,
-            "Ocp-Apim-Subscription-Key": this.collectionKey,
-            "X-Target-Environment": this.environment
-          }
+      const authToken = await this.getAuthToken(this.remittance);
+      const response = await axios.get(`${this.getBaseUrl()}/remittance/v1_0/transfer/${referenceId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "X-Target-Environment": this.environment,
+          "Ocp-Apim-Subscription-Key": this.remittance.primaryKey
         }
-      );
+      });
       return response.data;
     } catch (error) {
-      console.error("Error getting transaction status:", error.response?.data || error.message);
+      console.error("Error getting remittance status:", error.response ? error.response.data : error.message);
       throw error;
     }
   }
