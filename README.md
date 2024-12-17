@@ -1,13 +1,13 @@
 
 # 🌐 MoMo Payments Library
 
-A TypeScript library for integrating MTN MoMo API for payment collection and transaction status retrieval. This library simplifies working with MTN MoMo APIs, enabling quick integration into your Node.js or TypeScript projects.
+A TypeScript library for integrating MTN MoMo API to manage various payment-related operations such as Request to Pay, Remittances, Transfers, and more. This library provides a simple interface to interact with the MoMo API, supporting both **sandbox** and **production** environments.
 
 ---
 
 ## 📦 Installation
 
-Install the package using npm:
+Install the package via npm:
 
 ```bash
 npm install momo-payments-lib
@@ -17,9 +17,11 @@ npm install momo-payments-lib
 
 ## 🌟 Features
 
-- 📥 Request payments via MTN MoMo API.
-- 🔍 Check payment transaction status.
-- 🌐 Supports both **sandbox** and **production** environments.
+- 📥 **Request to Pay**: Collect payments from customers.
+- 🔍 **Check Transaction Status**: Retrieve the status of payment transactions.
+- 💳 **Remittances**: Send money to other users.
+- 🔄 **Account Balances**: Fetch balance details for your accounts.
+- 🌐 **Environment Support**: Easily switch between **sandbox** and **production**.
 
 ---
 
@@ -30,12 +32,16 @@ npm install momo-payments-lib
 Add the following to your `.env` file:
 
 ```env
-API_USER_ID=your_api_user_id
-API_KEY=your_api_key
-PRIMARY_KEY=your_primary_key
+COLLECTION_API_USER_ID=your_collection_api_user_id
+COLLECTION_API_KEY=your_collection_api_key
+COLLECTION_PRIMARY_KEY=your_collection_primary_key
+
+REMITTANCE_API_USER_ID=your_remittance_api_user_id
+REMITTANCE_API_KEY=your_remittance_api_key
+REMITTANCE_PRIMARY_KEY=your_remittance_primary_key
 ```
 
-> Replace the placeholders with your actual MTN MoMo API credentials.
+> Replace placeholders with your MTN MoMo API credentials for each service.
 
 ---
 
@@ -43,36 +49,42 @@ PRIMARY_KEY=your_primary_key
 
 ### **Import and Initialize**
 
-Create an instance of `MoMoClient`:
+Create an instance of `MoMoClient` with separate configurations for each product:
 
 ```typescript
 import { MoMoClient } from 'momo-payments-lib';
 
 const momoClient = new MoMoClient({
-  apiUserId: process.env.API_USER_ID || '', // Your API User ID
-  apiKey: process.env.API_KEY || '',       // Your API Key
-  primaryKey: process.env.PRIMARY_KEY || '', // Your Primary Key
-  environment: 'sandbox',                  // Use 'sandbox' for testing or 'production' for live
+  collection: {
+    apiUserId: process.env.COLLECTION_API_USER_ID || '',
+    apiKey: process.env.COLLECTION_API_KEY || '',
+    primaryKey: process.env.COLLECTION_PRIMARY_KEY || '',
+  },
+  remittance: {
+    apiUserId: process.env.REMITTANCE_API_USER_ID || '',
+    apiKey: process.env.REMITTANCE_API_KEY || '',
+    primaryKey: process.env.REMITTANCE_PRIMARY_KEY || '',
+  },
+  environment: 'sandbox', // Use 'sandbox' for testing or 'production' for live
 });
 ```
 
 ---
 
-### **Request Payment**
+### **Request to Pay**
 
-To initiate a payment:
+To request a payment:
 
 ```typescript
 const requestPayment = async () => {
   try {
     const response = await momoClient.requestPayment({
-      amount: 50.00,             // Payment amount
+      amount: 100,
       currency: 'EUR',
-      refrence: 'Your invoice number',
-      phoneNumber: '256123456789', // Phone number to charge in MSISDN format
+      phoneNumber: '256700123456',
+      reference: 'Invoice123',
     });
-
-    console.log('Payment initiated successfully:', response);
+    console.log('Payment requested:', response);
   } catch (error) {
     console.error('Error requesting payment:', error.message);
   }
@@ -83,12 +95,12 @@ requestPayment();
 
 #### 📥 **Request Parameters**
 
-| Parameter    | Type     | Description                                  |
-|--------------|----------|---------------------------------------------|
-| `amount`     | `number` | Amount to charge.                           |
-| `currency`   | `string` | The currency you want to use.               |
-| `refrence`   | `string` | Your Refrence number for the payment.       |
-| `phoneNumber`| `string` | Receiver's phone number (MSISDN).           |
+| Parameter      | Type     | Description                           |
+|----------------|----------|---------------------------------------|
+| `amount`       | `number` | Amount to charge.                    |
+| `currency`     | `string` | Currency code (e.g., "UGX", "EUR").  |
+| `phoneNumber`  | `string` | Phone number (MSISDN format).        |
+| `reference`    | `string` | Your reference number for tracking.  |
 
 #### ✅ **Response**
 
@@ -102,49 +114,65 @@ requestPayment();
 
 ### **Check Payment Status**
 
-To fetch the status of a payment:
+To check the status of a payment:
 
 ```typescript
 const checkPaymentStatus = async () => {
   try {
-    const status = await momoClient.getPaymentStatus('reference-id-here');
+    const status = await momoClient.getPaymentStatus('reference-id');
     console.log('Payment status:', status);
   } catch (error) {
-    console.error('Error checking payment status:', error.message);
+    console.error('Error fetching status:', error.message);
   }
 };
 
 checkPaymentStatus();
 ```
 
-#### 📊 **Status Response**
-
-A successful status check returns:
+#### 📊 **Response**
 
 ```json
 {
-  "amount": "50.00",
+  "amount": "100.00",
   "currency": "EUR",
+  "status": "SUCCESSFUL",
   "payer": {
     "partyIdType": "MSISDN",
-    "partyId": "256123456789"
+    "partyId": "256700123456"
   },
-  "status": "SUCCESSFUL",
   "reason": null
 }
 ```
 
 ---
 
-## 🛡️ Error Handling
+### **Remittances**
 
-Errors from the MTN API or network issues are caught and logged. Ensure your application has appropriate error handling when using these methods.
+To send money via the remittance API:
+
+```typescript
+const sendMoney = async () => {
+  try {
+    const response = await momoClient.sendRemittance({
+      amount: 50,
+      currency: 'USD',
+      phoneNumber: '256700123456',
+      externalId: 'Remittance123',
+    });
+    console.log('Remittance sent:', response);
+  } catch (error) {
+    console.error('Error sending remittance:', error.message);
+  }
+};
+
+sendMoney();
+```
 
 ---
 
-## 🔗 Example Full Integration
+## 🔗 Full Example
 
-Here’s a complete integration example:
+Here’s an end-to-end integration example:
 
 ```typescript
 import { MoMoClient } from 'momo-payments-lib';
@@ -153,53 +181,56 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const momoClient = new MoMoClient({
-  apiUserId: process.env.API_USER_ID || '',
-  apiKey: process.env.API_KEY || '',
-  primaryKey: process.env.PRIMARY_KEY || '',
+  collection: {
+    apiUserId: process.env.COLLECTION_API_USER_ID || '',
+    apiKey: process.env.COLLECTION_API_KEY || '',
+    primaryKey: process.env.COLLECTION_PRIMARY_KEY || '',
+  },
+  remittance: {
+    apiUserId: process.env.REMITTANCE_API_USER_ID || '',
+    apiKey: process.env.REMITTANCE_API_KEY || '',
+    primaryKey: process.env.REMITTANCE_PRIMARY_KEY || '',
+  },
   environment: 'sandbox',
 });
 
-const processPayment = async () => {
+const processTransaction = async () => {
   try {
-    console.log('Requesting payment...');
     const paymentResponse = await momoClient.requestPayment({
-      amount: '100.00',
+      amount: 100,
       currency: 'UGX',
-      refrence: 'Invoice001',
-      phoneNumber: '256789012345',
+      phoneNumber: '256700123456',
+      reference: 'Invoice001',
     });
+    console.log('Payment Requested:', paymentResponse);
 
-    console.log('Payment initiated:', paymentResponse);
-
-    console.log('Checking payment status...');
-    const status = await momoClient.getPaymentStatus(paymentResponse.referenceId);
-
-    console.log('Payment status:', status);
+    const paymentStatus = await momoClient.getPaymentStatus(paymentResponse.referenceId);
+    console.log('Payment Status:', paymentStatus);
   } catch (error) {
     console.error('Error:', error.message);
   }
 };
 
-processPayment();
+processTransaction();
 ```
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository.
-2. Make your changes.
-3. Submit a pull request.
+1. Fork this repository.
+2. Implement your changes.
+3. Open a pull request with a detailed explanation of your feature or fix.
 
 ---
 
 ## 📜 License
 
-This library is licensed under the MIT License.
+This library is released under the MIT License.
 
 ---
 
 ## 📝 Notes
 
-- For **sandbox testing**, you must register your application on the MTN Developer Portal.
-- Replace `256123456789` with valid MSISDN numbers.
+- Ensure you have registered and obtained credentials for each MTN MoMo product from the [MTN Developer Portal](https://momodeveloper.mtn.com/).
+- Replace placeholders with actual MSISDN numbers in production environments.
